@@ -269,8 +269,8 @@ export function depthOf(id: string): number {
 /** Chain used by "Explore connection": leadership at the top down through this person to their reports. */
 export function journeyFor(id: string): string[] {
   const chain = [...ancestorsOf(id), id];
-  const kids = CHILDREN[id] ?? [];
-  return kids.length ? [...chain, kids[0]] : chain;
+  const first = (CHILDREN[id] ?? [])[0];
+  return first ? [...chain, first] : chain;
 }
 
 export const CARD_W = 250;
