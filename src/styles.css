@@ -132,13 +132,335 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
+/* ---------- Lift Greenwood organisation map ---------- */
+
+:root {
+  --canvas: oklch(0.24 0.052 152);
+  --ink: oklch(0.17 0.045 152);
+  --cream: oklch(0.95 0.02 110);
+  --lime: oklch(0.88 0.19 122);
+  --moss: oklch(0.62 0.16 150);
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Karla", system-ui, sans-serif;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-ink: var(--ink);
+  --color-cream: var(--cream);
+  --color-lime: var(--lime);
+  --color-moss: var(--moss);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
   }
 
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
+    background-color: var(--canvas);
+    color: var(--cream);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 500;
   }
 }
+
+@layer components {
+  .bg-leaf {
+    background-image: radial-gradient(
+        ellipse at 20% 15%,
+        color-mix(in oklab, var(--moss) 22%, transparent),
+        transparent 55%
+      ),
+      radial-gradient(
+        ellipse at 82% 78%,
+        color-mix(in oklab, var(--moss) 16%, transparent),
+        transparent 55%
+      );
+  }
+  .bg-vignette {
+    background: radial-gradient(ellipse at center, transparent 45%, color-mix(in oklab, var(--ink) 78%, transparent) 100%);
+  }
+
+  .node {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    height: 100%;
+    padding: 0.5rem 0.9rem 0.5rem 0.5rem;
+    text-align: left;
+    border-radius: 16px;
+    border: 1px solid color-mix(in oklab, var(--cream) 14%, transparent);
+    background: color-mix(in oklab, var(--ink) 82%, transparent);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 18px 40px -24px oklch(0 0 0 / 0.85);
+    transition:
+      transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1),
+      opacity 0.4s ease,
+      box-shadow 0.4s ease,
+      border-color 0.4s ease,
+      background 0.4s ease;
+  }
+  .node:hover {
+    transform: scale(1.055);
+    border-color: color-mix(in oklab, var(--lime) 55%, transparent);
+    box-shadow: 0 26px 60px -22px oklch(0 0 0 / 0.9);
+  }
+  .node.is-dim {
+    opacity: 0.28;
+    filter: saturate(0.5);
+  }
+  .node.is-selected {
+    transform: scale(1.08);
+    border-color: var(--lime);
+    background: color-mix(in oklab, var(--ink) 94%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--lime) 45%, transparent),
+      0 30px 70px -24px oklch(0 0 0 / 0.95);
+  }
+  .node.principal {
+    background: color-mix(in oklab, var(--cream) 92%, transparent);
+    color: oklch(0.2 0.05 152);
+    border-color: transparent;
+  }
+  .node.senior {
+    background: color-mix(in oklab, var(--moss) 34%, oklch(0.2 0.05 152));
+  }
+  .node.house {
+    border-color: color-mix(in oklab, var(--house) 60%, transparent);
+    background: linear-gradient(
+      100deg,
+      color-mix(in oklab, var(--house) 26%, oklch(0.18 0.04 152)),
+      color-mix(in oklab, var(--ink) 92%, transparent)
+    );
+  }
+  .node.house:hover,
+  .node.house.is-selected {
+    border-color: var(--house);
+    box-shadow: 0 24px 60px -22px color-mix(in oklab, var(--house) 60%, transparent);
+  }
+  .house-dot {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    height: 12px;
+    width: 12px;
+    border-radius: 999px;
+    background: var(--house);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--house) 22%, transparent);
+  }
+  .node {
+    position: relative;
+  }
+  .node-photo {
+    display: block;
+    height: 76px;
+    width: 76px;
+    flex: none;
+    overflow: hidden;
+    border-radius: 12px;
+  }
+  .node-photo img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    object-position: center 22%;
+  }
+  .node-body {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .node-name {
+    font-family: var(--font-display);
+    font-size: 17px;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+  .node-title {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  .node-focus {
+    font-size: 12px;
+    opacity: 0.55;
+  }
+
+  .edge {
+    fill: none;
+    stroke: color-mix(in oklab, var(--cream) 28%, transparent);
+    stroke-width: 1.6px;
+    transition: opacity 0.45s ease;
+  }
+  .edge-in {
+    stroke-dasharray: 1400;
+    stroke-dashoffset: 1400;
+    animation: draw 1.1s cubic-bezier(0.35, 0.9, 0.3, 1) forwards;
+  }
+  .edge-pulse {
+    fill: none;
+    stroke: var(--lime);
+    stroke-width: 2.4px;
+    stroke-linecap: round;
+    stroke-dasharray: 26 300;
+    animation: travel 1.6s linear infinite;
+    filter: drop-shadow(0 0 6px color-mix(in oklab, var(--lime) 55%, transparent));
+  }
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes travel {
+    from {
+      stroke-dashoffset: 326;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  .float-slow {
+    animation: float 11s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(-3px);
+    }
+    50% {
+      transform: translateY(4px);
+    }
+  }
+  .hint-pulse {
+    animation: hintp 3s ease-in-out infinite;
+  }
+  @keyframes hintp {
+    0%,
+    100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  .btn-ghost {
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--cream) 20%, transparent);
+    padding: 0.5rem 1rem;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--cream) 80%, transparent);
+    transition: all 0.3s ease;
+  }
+  .btn-ghost:hover {
+    border-color: var(--lime);
+    color: var(--lime);
+  }
+  .btn-solid {
+    border-radius: 999px;
+    background: var(--lime);
+    color: oklch(0.22 0.05 152);
+    padding: 0.55rem 1.1rem;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    transition: transform 0.3s ease, filter 0.3s ease;
+  }
+  .btn-solid:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+  }
+  .ctl {
+    height: 38px;
+    width: 38px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--cream) 18%, transparent);
+    background: color-mix(in oklab, var(--ink) 55%, transparent);
+    backdrop-filter: blur(6px);
+    font-size: 18px;
+    line-height: 1;
+    color: color-mix(in oklab, var(--cream) 85%, transparent);
+    transition: all 0.3s ease;
+  }
+  .ctl:hover {
+    border-color: var(--lime);
+    color: var(--lime);
+  }
+
+  .panel {
+    width: min(360px, 92vw);
+    border-radius: 20px;
+    border: 1px solid color-mix(in oklab, var(--cream) 14%, transparent);
+    background: color-mix(in oklab, var(--ink) 86%, transparent);
+    padding: 1.25rem;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 40px 80px -40px oklch(0 0 0 / 0.9);
+  }
+  .panel-photo {
+    height: 76px;
+    width: 76px;
+    flex: none;
+    border-radius: 14px;
+    object-fit: cover;
+    object-position: center 20%;
+  }
+  .lbl {
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--cream) 45%, transparent);
+  }
+  .lnk {
+    margin-top: 2px;
+    text-align: left;
+    border-bottom: 1px solid transparent;
+    transition: all 0.25s ease;
+  }
+  .lnk:hover {
+    color: var(--lime);
+    border-color: var(--lime);
+  }
+  .chip {
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--cream) 16%, transparent);
+    padding: 0.25rem 0.65rem;
+    font-size: 12px;
+    transition: all 0.25s ease;
+  }
+  .chip:hover {
+    border-color: var(--lime);
+    color: var(--lime);
+  }
+  .house-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--house) 45%, transparent);
+    background: color-mix(in oklab, var(--ink) 55%, transparent);
+    padding: 0.4rem 0.85rem;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    backdrop-filter: blur(6px);
+    transition: all 0.3s ease;
+  }
+  .house-pill:hover {
+    border-color: var(--house);
+    transform: translateY(-2px);
+  }
+}
+
